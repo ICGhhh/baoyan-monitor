@@ -2,14 +2,12 @@ name: Daily Baoyan Check
 
 on:
   schedule:
-    # UTC 12:00 = 北京时间 20:00
     - cron: '0 12 * * *'
   workflow_dispatch:
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +31,6 @@ jobs:
           QQ_SMTP_CODE: ${{ secrets.QQ_SMTP_CODE }}
 
       - name: Commit updated seen.json
-        if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
