@@ -8,10 +8,38 @@ import os
 import sys
 from datetime import datetime, timezone, timedelta
 
+# 测试邮件模式：先处理，避免加载 playwright 等重依赖
+if "--test-email" in sys.argv:
+    from notifier import send
+    test_notices = [{
+        "id": 99999,
+        "title": "【示例】北京大学集成电路学院2026年优秀大学生夏令营报名通知",
+        "school": "北京大学",
+        "college": "集成电路学院",
+        "recruit_type": "夏令营",
+        "end_time": "2026-06-30 23:59:59",
+        "url": "https://www.baoyantongzhi.com/notice/detail/99999",
+        "reason": "集成电路学院夏令营，直接相关",
+        "full_text": "北京大学集成电路学院将于2026年7月10日-15日举办优秀大学生夏令营，面向全国高校招收大三优秀本科生。招生方向包括：集成电路设计、微电子学与固体电子学、半导体器件与工艺、EDA工具等。",
+    }, {
+        "id": 99998,
+        "title": "【示例】清华大学微电子与纳电子学系2026年夏令营通知",
+        "school": "清华大学",
+        "college": "微电子与纳电子学系",
+        "recruit_type": "夏令营",
+        "end_time": "2026-07-05 23:59:59",
+        "url": "https://www.baoyantongzhi.com/notice/detail/99998",
+        "reason": "微电子与纳电子学系，属于集成电路相关方向",
+        "full_text": "清华大学微电子与纳电子学系拟于2026年7月中旬举办全国优秀大学生夏令营。招收方向：集成电路设计与设计自动化、微纳器件与集成、射频与混合信号集成电路等。",
+    }]
+    print("发送测试邮件...")
+    send(test_notices)
+    print("测试邮件发送完成，请检查邮箱。")
+    sys.exit(0)
+
 from config import SEEN_FILE, MONITOR_END_DATE
 from scraper import fetch_notice_list, fetch_detail_batch, enrich_notice_with_list_data
 from analyzer import analyze
-from notifier import send
 
 CST = timezone(timedelta(hours=8))
 
@@ -133,31 +161,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    if "--test-email" in sys.argv:
-        from notifier import send
-        test_notices = [{
-            "id": 99999,
-            "title": "【示例】北京大学集成电路学院2026年优秀大学生夏令营报名通知",
-            "school": "北京大学",
-            "college": "集成电路学院",
-            "recruit_type": "夏令营",
-            "end_time": "2026-06-30 23:59:59",
-            "url": "https://www.baoyantongzhi.com/notice/detail/99999",
-            "reason": "集成电路学院夏令营，直接相关",
-            "full_text": "北京大学集成电路学院将于2026年7月10日-15日举办优秀大学生夏令营，面向全国高校招收大三优秀本科生。招生方向包括：集成电路设计、微电子学与固体电子学、半导体器件与工艺、EDA工具等。申请人需具有电子、微电子、计算机等相关专业背景。",
-        }, {
-            "id": 99998,
-            "title": "【示例】清华大学微电子与纳电子学系2026年夏令营通知",
-            "school": "清华大学",
-            "college": "微电子与纳电子学系",
-            "recruit_type": "夏令营",
-            "end_time": "2026-07-05 23:59:59",
-            "url": "https://www.baoyantongzhi.com/notice/detail/99998",
-            "reason": "微电子与纳电子学系，属于集成电路相关方向",
-            "full_text": "清华大学微电子与纳电子学系拟于2026年7月中旬举办全国优秀大学生夏令营。招收方向：集成电路设计与设计自动化、微纳器件与集成、射频与混合信号集成电路等。欢迎微电子、电子工程、计算机等相关专业学生报名。",
-        }]
-        print("发送测试邮件...")
-        send(test_notices)
-        print("测试邮件发送完成，请检查邮箱。")
-    else:
-        asyncio.run(main())
+    asyncio.run(main())
