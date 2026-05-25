@@ -103,7 +103,9 @@ async def main():
         sys.exit(1)
 
     if not notices:
-        print("  没有找到任何通知，退出。")
+        print("  没有找到任何通知，发送心跳确认邮件。")
+        from notifier import send_heartbeat
+        send_heartbeat()
         return
 
     # ── 2. 去重 ──
@@ -112,7 +114,9 @@ async def main():
     print(f"\n[2/4] 去重: 已记录 {len(seen_ids)} 条, 今日新增 {len(new_notices)} 条")
 
     if not new_notices:
-        print("  今日没有新通知，不发送邮件。")
+        print("  今日没有新通知，发送心跳确认邮件。")
+        from notifier import send_heartbeat
+        send_heartbeat()
         all_ids = {n["id"] for n in notices if n.get("id")}
         save_seen(all_ids | seen_ids)
         return
