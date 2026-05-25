@@ -35,12 +35,25 @@ SYSTEM_PROMPT = """你是一个保研信息筛选助手。你的任务是判断�
 - "reason": 一句话理由（中文，简洁）"""
 
 
+BATCH_SIZE = 10
+
 def analyze(notices: list[dict]) -> list[dict]:
-    """批量分析通知，返回相关性判断结果"""
+    """分批分析通知，每批最多 BATCH_SIZE 条，返回相关性判断结果"""
     if not notices:
         return []
 
-    # 构建用户消息：编号 + 标题 + 正文前500字
+    all_results = []
+    for batch_start in range(0, len(notices), BATCH_SIZE):
+        batch = notices[batch_start:batch_start + BATCH_SIZE]
+        batch_results = _analyze_batch(batch)
+        all_results.extend(batch_results)
+        print(f"    批次 {batch_start // BATCH_SIZE + 1}: {len(batch)} 条 → {len(batch_results)} 条结果")
+
+    return all_results
+
+
+def _analyze_batch(notices: list[dict]) -> list[dict]:
+    """分析单批通知（最多 BATCH_SIZE 条）"""
     items = []
     for n in notices:
         text = n.get("full_text", "")
@@ -55,13 +68,16 @@ def analyze(notices: list[dict]) -> list[dict]:
                 {"role": "user", "content": user_message},
             ],
             temperature=0.1,
-            max_tokens=2000,
+            max_tokens=4000,
         )
         raw = resp.choices[0].message.content or ""
-        return _parse_response(raw, notices)
+        parsed = _parse_response(raw, notices)
+        if not parsed:
+            print(f"      [WARN] 解析失败，原始响应: {raw[:300]}...")
+        return parsed
 
     except Exception as e:
-        print(f"  [ERROR] DeepSeek API 调用失败: {e}")
+        print(f"      [ERROR] DeepSeek API 调用失败: {e}")
         return []
 
 
