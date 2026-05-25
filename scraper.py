@@ -35,7 +35,7 @@ async def fetch_notice_list() -> list[dict]:
 
     api_url = (
         f"{API_BASE}/backgd/notice/show/list"
-        f"?current=1&size={FETCH_SIZE}&year={NOTICE_YEAR}&orderBy=endTime"
+        f"?current=1&size={FETCH_SIZE}&year={NOTICE_YEAR}&orderBy=publishTime"
     )
     result = await page.evaluate(
         """async (url) => {
