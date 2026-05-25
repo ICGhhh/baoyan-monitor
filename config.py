@@ -6,7 +6,7 @@ API_BASE = "https://ajqwsiasyqyi.sealosgzg.site"
 # ── 抓取配置 ──
 NOTICE_YEAR = 2026
 FETCH_SIZE = 60               # 每次抓取条数（取新不取多）
-LOOKBACK_DAYS = 3             # 只处理最近 N 天发布的
+LOOKBACK_DAYS = 14            # 只处理最近 N 天发布的
 
 # ── 监控截止 ──
 MONITOR_END_DATE = "2026-09-30"
