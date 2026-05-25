@@ -51,6 +51,54 @@ def send_daily_report(notices: list[dict]) -> bool:
         return False
 
 
+def send_heartbeat() -> bool:
+    """发送心跳确认邮件：今日无新通知"""
+    now = datetime.now(CST)
+    date_str = now.strftime("%m月%d日")
+    subject = f"【保研日报】{date_str} · 今日无新通知"
+
+    body = f"""保研通知日报 · {date_str}
+
+今日没有新增的保研通知，系统运行正常。
+
+下次检查：明天 20:00
+数据来源：https://www.baoyantongzhi.com/notice"""
+
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:'Microsoft YaHei',Arial,sans-serif;max-width:640px;margin:0 auto;padding:16px;">
+  <div style="background:#214ab3;color:#fff;padding:18px;border-radius:10px 10px 0 0;">
+    <h2 style="margin:0;font-size:18px;">保研通知日报</h2>
+    <div style="font-size:12px;opacity:0.85;margin-top:4px;">{date_str}</div>
+  </div>
+  <div style="background:#fff;padding:30px;border:1px solid #e0e0e0;border-top:0;border-radius:0 0 10px 10px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px;">📭</div>
+    <div style="font-size:16px;color:#333;margin-bottom:8px;">今日没有新增通知</div>
+    <div style="font-size:13px;color:#888;">系统运行正常，下次检查：明天 20:00</div>
+  </div>
+  <div style="text-align:center;font-size:11px;color:#aaa;margin-top:12px;">
+    自动监控 · 每日 20:00 · <a href="https://www.baoyantongzhi.com/notice" style="color:#aaa;">保研通知网</a>
+  </div>
+</body></html>"""
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = SMTP_USER
+    msg["To"] = RECIPIENT
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+    msg.attach(MIMEText(html, "html", "utf-8"))
+
+    try:
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(SMTP_USER, [RECIPIENT], msg.as_string())
+        print(f"  心跳邮件已发送: {subject}")
+        return True
+    except Exception as e:
+        print(f"  [ERROR] 心跳邮件发送失败: {e}")
+        return False
+
+
 # ── 纯文本 ────────────────────────────────────────────
 
 def _build_text(relevant: list, others: list, date_str: str, total: int) -> str:
