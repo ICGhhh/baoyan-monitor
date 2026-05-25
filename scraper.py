@@ -30,34 +30,45 @@ async def _get_page():
 
 
 async def fetch_notice_list() -> list[dict]:
-    """在浏览器内调用后端列表 API，返回通知列表"""
+    """分页抓取全部通知列表（按发布时间倒序）"""
     p, browser, page = await _get_page()
 
-    api_url = (
-        f"{API_BASE}/backgd/notice/show/list"
-        f"?current=1&size={FETCH_SIZE}&year={NOTICE_YEAR}&orderBy=publishTime"
-    )
-    result = await page.evaluate(
-        """async (url) => {
-            const resp = await fetch(url);
-            return await resp.json();
-        }""",
-        api_url,
-    )
+    all_records = []
+    page_num = 1
+
+    while True:
+        api_url = (
+            f"{API_BASE}/backgd/notice/show/list"
+            f"?current={page_num}&size={FETCH_SIZE}&year={NOTICE_YEAR}"
+            f"&orderBy=publishTime"
+        )
+        result = await page.evaluate(
+            """async (url) => {
+                const resp = await fetch(url);
+                return await resp.json();
+            }""",
+            api_url,
+        )
+
+        if not result or result.get("code") != 200:
+            break
+
+        records = result["data"]["records"]
+        total = result["data"]["total"]
+        all_records.extend(records)
+        print(f"    第{page_num}页: {len(records)} 条, 累计 {len(all_records)}/{total}")
+
+        if len(all_records) >= total:
+            break
+        page_num += 1
 
     await browser.close()
     await p.stop()
 
-    if not result or result.get("code") != 200:
-        print(f"  [ERROR] API 返回异常: {result}")
-        return []
-
-    records = result["data"]["records"]
-
     # 按发布时间过滤
     cutoff = datetime.now(CST) - timedelta(days=LOOKBACK_DAYS)
     filtered = []
-    for n in records:
+    for n in all_records:
         pub_time = _parse_publish_time(n)
         if pub_time and pub_time >= cutoff:
             n["_pub_dt"] = pub_time
