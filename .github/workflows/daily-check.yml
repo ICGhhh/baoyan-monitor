@@ -2,7 +2,8 @@ name: Daily Baoyan Check
 
 on:
   schedule:
-    - cron: '0 12 * * *'
+    # 每天北京时间 20:07 (UTC 12:07)，避开整点高峰
+    - cron: '7 12 * * *'
   workflow_dispatch:
 
 permissions:
