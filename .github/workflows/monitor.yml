@@ -1,0 +1,48 @@
+name: Baoyan Monitor
+
+on:
+  schedule:
+    # 每天北京时间晚上 19:00 定时触发一次 (对应 UTC 11:00)
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+    # 支持手动一键运行触发
+
+permissions:
+  contents: write # 授予写入权限以支持将更新后的去重数据库推回仓库
+
+jobs:
+  run-monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+
+    - name: Run Monitor Script
+      env:
+        BARK_KEY: ${{ secrets.BARK_KEY }}
+      run: |
+        python main.py
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        # 仅在 sent_notices.json 被修改时进行 commit 和 push
+        if [ -f sent_notices.json ] && git status --porcelain | grep -q sent_notices.json; then
+          git add sent_notices.json
+          git commit -m "chore: update sent notices database [skip ci]"
+          git push
+        else
+          echo "No changes in sent_notices.json, skipping commit."
+        fi
